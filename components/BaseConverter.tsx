@@ -3,8 +3,40 @@ import { convertBase } from '../services/conversionService';
 import { ArrowsRightLeftIcon, ChevronUpIcon, ChevronDownIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline';
 
 const BaseSelector: React.FC<{ label: string; value: number; onChange: (val: number) => void; }> = ({ label, value, onChange }) => {
+    const [inputValue, setInputValue] = useState<string>(value.toString());
+    const [error, setError] = useState<boolean>(false);
+
+    useEffect(() => {
+        setInputValue(value.toString());
+    }, [value]);
+
     const increment = () => onChange(Math.min(36, value + 1));
     const decrement = () => onChange(Math.max(2, value - 1));
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        setInputValue(newValue);
+
+        if (newValue === '') {
+            setError(false);
+            return;
+        }
+
+        const parsed = parseInt(newValue, 10);
+        if (isNaN(parsed) || parsed < 2 || parsed > 36) {
+            setError(true);
+        } else {
+            setError(false);
+            onChange(parsed);
+        }
+    };
+
+    const handleBlur = () => {
+        if (inputValue === '' || error) {
+            setInputValue(value.toString());
+            setError(false);
+        }
+    };
 
     return (
         <div className="relative group flex flex-col items-center justify-center space-y-3 py-2 w-36 sm:w-44">
@@ -12,8 +44,15 @@ const BaseSelector: React.FC<{ label: string; value: number; onChange: (val: num
                 {label}
             </div>
             <div className="flex items-center justify-center space-x-2 w-full pt-1">
-                <div className="bg-slate-900/70 border-2 border-slate-700 rounded-xl w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center transition-all duration-300 group-hover:border-cyan-400/80 group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)]">
-                    <span className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-100 transition-colors group-hover:text-cyan-400 text-center select-none">{value}</span>
+                <div className={`bg-slate-900/70 border-2 rounded-xl w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${error ? 'border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.5)]' : 'border-slate-700 group-hover:border-cyan-400/80 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)]'}`}>
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        className={`w-full h-full bg-transparent text-4xl sm:text-5xl md:text-6xl font-black text-center outline-none transition-colors ${error ? 'text-red-400' : 'text-slate-100 group-hover:text-cyan-400'}`}
+                        aria-label={`Base value for ${label}`}
+                    />
                 </div>
                 <div className="flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button onClick={increment} className="p-1 text-slate-500 hover:text-cyan-400 transition-colors" aria-label={`Increase base for ${label}`}>
